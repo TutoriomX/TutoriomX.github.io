@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ULTIMATE SOLUTION | Quiz Practice</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Creepster&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+        }
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .sticky-footer {
+            position: sticky;
+            bottom: 0;
+            z-index: 40;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
+        }
+        main {
+            flex: 1;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        main::-webkit-scrollbar { display: none; }
+        .loader {
+            display: flex;
+            justify-content: center;
+            padding: 3rem;
+            gap: 8px;
+        }
+        .loader-dot {
+            width: 12px;
+            height: 12px;
+            background: #3182ce;
+            border-radius: 50%;
+            animation: pulse 1.2s infinite;
+        }
+        .loader-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loader-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        .question-item {
+            background: #f1f5f9;
+            padding: 20px 16px;
+            border-radius: 16px;
+            margin: 20px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .question-item.subjective { background: #fff7ed; }
+        .q-tag {
+            display: inline-block;
+            background: black;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+        }
+        .question-text {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        .question-options-divider {
+            border-top: 1px dashed #cbd5e1;
+            margin: 16px 0 12px;
+        }
+        .option-container {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .option-container:hover { background: #f8fafc; }
+        .option-container input {
+            margin-right: 14px;
+            accent-color: black;
+            width: 18px;
+            height: 18px;
+        }
+        .error-message, .info-box {
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 12px;
+        }
+        .error-message { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+        .info-box { background: #dbeafe; color: #1e40af; text-align: center; }
+        .katex { font-size: 1em !important; }
+        img { max-width: 100%; border-radius: 8px; }
+        .back-link {
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: 500;
+            color: #1f2937;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .nav-btn, .submit-header-btn {
+            background: #1e293b;
+            padding: 8px 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            line-height: 1.2;
+            border-radius: 40px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+        .nav-btn:hover:not(:disabled), .submit-header-btn:hover:not(:disabled) {
+            background: #0f172a;
+            transform: scale(0.97);
+        }
+        .nav-btn:disabled, .submit-header-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .submit-header-btn.enabled {
+            background: #059669;
+        }
+        .submit-header-btn.enabled:hover {
+            background: #047857;
+        }
+        .question-jump {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 40px;
+            height: 42px;
+        }
+        .question-jump input {
+            width: 60px;
+            padding: 6px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 30px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: white;
+        }
+        .chapter-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+        .header-row-3 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sticky-header bg-white px-4 py-2">
+        <div class="max-w-3xl md:max-w-4xl mx-auto">
+            <div class="mb-1">
+                <span id="backButton" class="back-link text-sm">← Back to Main Page</span>
+            </div>
+            <div class="mb-2">
+                <h2 id="dynamicChapterTitle" class="chapter-title">Loading...</h2>
+            </div>
+            <div class="header-row-3">
+                <div class="question-jump">
+                    <input type="number" id="questionJumpInput" min="1" step="1" value="1">
+                    <span class="text-sm font-medium">/ <span id="totalQuestionsSpan">0</span></span>
+                </div>
+                <button id="submitHeaderBtn" class="submit-header-btn" disabled>Submit Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <main>
+        <div class="max-w-3xl md:max-w-4xl mx-auto px-4 py-6">
+            <div id="dynamic-sections-container">
+                <div class="loader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>
+            </div>
+        </div>
+    </main>
+
+    <div class="sticky-footer bg-white px-4 py-3">
+        <div class="max-w-3xl md:max-w-4xl mx-auto flex justify-start gap-4">
+            <button id="prevBtn" class="nav-btn">◀ Previous</button>
+            <button id="nextBtn" class="nav-btn">Next ▶</button>
+        </div>
+    </div>
+
+    <div id="customToast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 md:left-auto md:right-6 md:translate-x-0 z-50 toast-notification bg-gray-800 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm" style="opacity:0; visibility:hidden; transition:0.25s;">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span id="toastMessage">Info</span>
+    </div>
+
+    <script>
+        (function() {
+            // -------------------- CONFIGURATION --------------------
+            const API_BASE = "https://dilshadalmm-yosv.onrender.com";
+            const QUIZ_ENDPOINT = `${API_BASE}/api/quiz`;
+            const PERFORMANCE_ENDPOINT = `${API_BASE}/practice/question/session`;
+            
+            // -------------------- AUTH / TOKEN (mock or from storage) --------------------
+            // In production, retrieve Firebase token from your auth system.
+            // For demo, we look for a token in localStorage or generate a dummy.
+            async function getFirebaseToken() {
+                let token = localStorage.getItem('firebaseToken');
+                if (!token) {
+                    console.warn("No Firebase token found. Using dummy token for demo.");
+                    token = "dummy_token_for_demo_only_replace_with_real";
+                }
+                return token;
+            }
+
+            // -------------------- UUID GENERATOR --------------------
+            function generateUUID() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+
+            // -------------------- SESSION STATE --------------------
+            let sessionId = generateUUID();
+            let sessionStartedAt = Date.now();
+            const activityType = "questionPractice";
+            
+            // Performance tracking buffers
+            let questionsBuffer = [];          // stores { questionId, isCorrect, timeSpent, attemptedAt, topic, chapter, subject, difficultyLevel }
+            let totalQuestionsAttempted = 0;
+            
+            // Timer for current question
+            let currentQuestionId = null;
+            let currentQuestionStartTime = null;
+            let timerPausedOffset = 0;         // accumulated paused milliseconds
+            let pauseStartTime = null;
+            let timerInterval = null;
+            let pendingStartTimeout = null;     // timeout for the 5-second delay
+            
+            // Flag to prevent double session finalization
+            let sessionFinalized = false;
+            let batchIntervalId = null;
+            
+            // Question metadata (extracted from API)
+            let currentClass = '', currentSubject = '', currentChapter = '';
+            
+            // Existing quiz state variables
+            let loadedQuestions = [];
+            let currentIndex = 0;
+            let userAnswers = [];
+            let nextCursor = null;
+            let isLoading = false;
+            let allLoaded = false;
+            let submitted = false;
+            
+            // DOM elements
+            const dynamicContainer = document.getElementById('dynamic-sections-container');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const jumpInput = document.getElementById('questionJumpInput');
+            const totalSpan = document.getElementById('totalQuestionsSpan');
+            const submitHeaderBtn = document.getElementById('submitHeaderBtn');
+            const chapterTitleEl = document.getElementById('dynamicChapterTitle');
+            
+            // -------------------- HELPER FUNCTIONS --------------------
+            function showToast(msg, isErr = false) {
+                const toast = document.getElementById('customToast');
+                const span = document.getElementById('toastMessage');
+                if (!toast) return;
+                span.innerText = msg;
+                toast.style.background = isErr ? 'linear-gradient(135deg, #dc2626, #b91c1c)' : '#1f2937';
+                toast.style.opacity = '1';
+                toast.style.visibility = 'visible';
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.visibility = 'hidden';
+                }, 2500);
+            }
+            
+            // -------------------- TIMER MANAGEMENT --------------------
+            function stopCurrentTimer() {
+                if (pendingStartTimeout) {
+                    clearTimeout(pendingStartTimeout);
+                    pendingStartTimeout = null;
+                }
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                if (currentQuestionStartTime !== null && currentQuestionId !== null && !pauseStartTime) {
+                    // Save final time for the question (only if timer was active and not paused)
+                    const endTime = Date.now();
+                    const rawSpent = endTime - currentQuestionStartTime - timerPausedOffset;
+                    const timeSpent = Math.max(0, rawSpent);
+                    if (timeSpent >= 0) {
+                        // We'll store later when moving next; but we need the question object details.
+                        // The actual push happens in recordCurrentQuestion() called by next/submit.
+                        // Just store the elapsed time temporarily
+                        window._pendingTimeSpent = timeSpent;
+                    }
+                }
+                currentQuestionStartTime = null;
+                currentQuestionId = null;
+                timerPausedOffset = 0;
+                pauseStartTime = null;
+            }
+            
+            function startTimerForQuestion(questionId, delayMs = 5000) {
+                stopCurrentTimer();
+                if (pendingStartTimeout) clearTimeout(pendingStartTimeout);
+                pendingStartTimeout = setTimeout(() => {
+                    pendingStartTimeout = null;
+                    if (!questionId) return;
+                    currentQuestionId = questionId;
+                    currentQuestionStartTime = Date.now();
+                    timerPausedOffset = 0;
+                    pauseStartTime = null;
+                    // Optional: interval to track live (not strictly needed)
+                    timerInterval = setInterval(() => {}, 1000);
+                }, delayMs);
+            }
+            
+            function pauseTimer() {
+                if (pauseStartTime === null && currentQuestionStartTime !== null && currentQuestionId !== null) {
+                    pauseStartTime = Date.now();
+                }
+            }
+            
+            function resumeTimer() {
+                if (pauseStartTime !== null && currentQuestionStartTime !== null && currentQuestionId !== null) {
+                    timerPausedOffset += (Date.now() - pauseStartTime);
+                    pauseStartTime = null;
+                }
+            }
+            
+            // Record the current question's performance (called before moving to next)
+            function recordCurrentQuestion(isCorrect) {
+                if (!currentQuestionId) return;
+                // Determine time spent
+                let timeSpent = 0;
+                if (currentQuestionStartTime !== null) {
+                    const end = Date.now();
+                    let raw = end - currentQuestionStartTime - timerPausedOffset;
+                    timeSpent = Math.max(0, raw);
+                } else if (window._pendingTimeSpent !== undefined) {
+                    timeSpent = window._pendingTimeSpent;
+                    delete window._pendingTimeSpent;
+                }
+                
+                // Find the question object to get metadata
+                const questionObj = loadedQuestions.find(q => q.id === currentQuestionId || q._id === currentQuestionId);
+                if (!questionObj) {
+                    console.warn("Question metadata missing for", currentQuestionId);
+                    return;
+                }
+                const topic = questionObj.topic || "General";
+                const chapter = questionObj.chapter || currentChapter;
+                const subject = questionObj.subject || currentSubject;
+                const difficultyLevel = questionObj.difficultyLevel || "medium";
+                const attemptedAt = Date.now();
+                
+                questionsBuffer.push({
+                    questionId: currentQuestionId,
+                    isCorrect: isCorrect,
+                    timeSpent: Math.floor(timeSpent),
+                    attemptedAt: attemptedAt,
+                    topic: topic,
+                    chapter: chapter,
+                    subject: subject,
+                    difficultyLevel: difficultyLevel
+                });
+                totalQuestionsAttempted++;
+                stopCurrentTimer();
+                currentQuestionId = null;
+                currentQuestionStartTime = null;
+            }
+            
+            // -------------------- SEND PERFORMANCE REPORT TO BACKEND --------------------
+            async function sendPerformanceReport(isFinal = false) {
+                if (sessionFinalized) return;
+                if (questionsBuffer.length === 0) return;
+                
+                const token = await getFirebaseToken();
+                if (!token) {
+                    showToast("Missing auth token. Performance not sent.", true);
+                    return;
+                }
+                
+                const payload = {
+                    tokenId: token,
+                    sessionId: sessionId,
+                    activityType: activityType,
+                    startedAt: sessionStartedAt,
+                    endedAt: Date.now(),
+                    questions: questionsBuffer.map(q => ({
+                        questionId: q.questionId,
+                        isCorrect: q.isCorrect,
+                        timeSpent: q.timeSpent,
+                        topic: q.topic,
+                        chapter: q.chapter,
+                        subject: q.subject,
+                        difficultyLevel: q.difficultyLevel
+                    }))
+                };
+                
+                try {
+                    const response = await fetch(PERFORMANCE_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errText}`);
+                    }
+                    const result = await response.json();
+                    if (result.success) {
+                        // Clear buffer after successful send
+                        questionsBuffer = [];
+                        if (isFinal) sessionFinalized = true;
+                        showToast(`Analytics sent (${payload.questions.length} questions)`);
+                    } else {
+                        throw new Error(result.error || "Unknown error");
+                    }
+                } catch (err) {
+                    console.error("Failed to send performance report:", err);
+                    showToast("Failed to send analytics. Will retry later.", true);
+                    // Buffer remains for next attempt
+                }
+            }
+            
+            // Finalize session (on page close or quiz submit)
+            async function finalizeSession() {
+                if (sessionFinalized) return;
+                // Record current question if active
+                if (currentQuestionId) {
+                    const currentQ = loadedQuestions[currentIndex];
+                    if (currentQ) {
+                        const isCorrect = evaluateCurrentQuestionCorrectness();
+                        recordCurrentQuestion(isCorrect);
+                    } else {
+                        stopCurrentTimer();
+                    }
+                }
+                await sendPerformanceReport(true);
+            }
+            
+            // Helper: determine if current selected answer is correct
+            function evaluateCurrentQuestionCorrectness() {
+                if (!loadedQuestions.length) return false;
+                const q = loadedQuestions[currentIndex];
+                if (q.questionType === 'Subjective') return false;
+                const selected = userAnswers[currentIndex];
+                return (selected !== undefined && selected === q.correctIndex);
+            }
+            
+            // -------------------- UI & NAVIGATION (extended with tracking) --------------------
+            async function goPrev() {
+                if (currentIndex > 0) {
+                    // Record current question before leaving
+                    const isCorrect = evaluateCurrentQuestionCorrectness();
+                    recordCurrentQuestion(isCorrect);
+                    currentIndex--;
+                    await renderCurrentQuestionAndStartTimer();
+                }
+            }
+            
+            async function goNext() {
+                if (currentIndex < loadedQuestions.length - 1) {
+                    const isCorrect = evaluateCurrentQuestionCorrectness();
+                    recordCurrentQuestion(isCorrect);
+                    currentIndex++;
+                    await renderCurrentQuestionAndStartTimer();
+                } else if (!allLoaded && !isLoading) {
+                    // Load more and then move
+                    const isCorrect = evaluateCurrentQuestionCorrectness();
+                    recordCurrentQuestion(isCorrect);
+                    await fetchNextChunk();
+                    if (currentIndex + 1 < loadedQuestions.length) {
+                        currentIndex++;
+                        await renderCurrentQuestionAndStartTimer();
+                    } else {
+                        showToast("No more questions available", true);
+                    }
+                } else if (allLoaded && currentIndex === loadedQuestions.length-1) {
+                    showToast("This is the last question");
+                }
+            }
+            
+            async function jumpToQuestion(num) {
+                let target = num - 1;
+                if (target < 0) target = 0;
+                if (target !== currentIndex) {
+                    // Record current question
+                    const isCorrect = evaluateCurrentQuestionCorrectness();
+                    recordCurrentQuestion(isCorrect);
+                    currentIndex = target;
+                    await renderCurrentQuestionAndStartTimer();
+                }
+            }
+            
+            async function renderCurrentQuestionAndStartTimer() {
+                if (!loadedQuestions.length) return;
+                const q = loadedQuestions[currentIndex];
+                dynamicContainer.innerHTML = '';
+                dynamicContainer.appendChild(renderSingleQuestion(q, currentIndex));
+                updateNavButtons();
+                updateJumpInput();
+                updateSubmitButtonState();
+                // Start timer for new question (with 5 sec delay)
+                startTimerForQuestion(q.id || q._id, 5000);
+                // Scroll
+                dynamicContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            
+            // Override original refreshCurrentQuestion with our version
+            function refreshCurrentQuestion() {
+                if (!loadedQuestions.length) return;
+                renderCurrentQuestionAndStartTimer();
+            }
+            
+            // Preserve original renderSingleQuestion but ensure it attaches radio change listeners (no change needed)
+            function renderSingleQuestion(question, idx) {
+                const isSubjective = (question.questionType === 'Subjective');
+                const div = document.createElement('div');
+                div.className = `question-item ${isSubjective ? 'subjective' : ''}`;
+                const tag = document.createElement('div');
+                tag.className = 'q-tag';
+                tag.textContent = `Question ${idx+1} ${isSubjective ? '(Subjective)' : '(MCQ)'}`;
+                const qText = document.createElement('div');
+                qText.className = 'question-text';
+                qText.innerHTML = (question.questionText || '').replace(/\r?\n/g, '<br>');
+                div.appendChild(tag);
+                div.appendChild(qText);
+                if (question.questionImageUrl) {
+                    const img = document.createElement('img');
+                    img.src = question.questionImageUrl;
+                    img.style.marginBottom = '16px';
+                    div.appendChild(img);
+                }
+                const divider = document.createElement('div');
+                divider.className = 'question-options-divider';
+                div.appendChild(divider);
+                
+                if (!isSubjective && question.options && question.options.length) {
+                    const optsDiv = document.createElement('div');
+                    const stored = userAnswers[idx];
+                    question.options.forEach((opt, optIdx) => {
+                        const label = document.createElement('label');
+                        label.className = 'option-container';
+                        const radio = document.createElement('input');
+                        radio.type = 'radio';
+                        radio.name = `q_${idx}`;
+                        radio.value = optIdx;
+                        if (stored === optIdx) radio.checked = true;
+                        radio.addEventListener('change', (e) => {
+                            if (e.target.checked) userAnswers[idx] = optIdx;
+                        });
+                        const span = document.createElement('span');
+                        span.innerHTML = opt.replace(/\r?\n/g, '<br>');
+                        label.appendChild(radio);
+                        label.appendChild(span);
+                        optsDiv.appendChild(label);
+                    });
+                    div.appendChild(optsDiv);
+                } else if (isSubjective) {
+                    const note = document.createElement('div');
+                    note.className = 'text-sm text-gray-500 italic bg-white p-3 rounded-lg mt-2';
+                    note.textContent = '📝 Subjective question — review and think critically.';
+                    div.appendChild(note);
+                }
+                if (typeof renderMathInElement === 'function') {
+                    try { renderMathInElement(div, { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}] }); } catch(e) {}
+                }
+                return div;
+            }
+            
+            function updateNavButtons() {
+                prevBtn.disabled = (currentIndex === 0);
+                nextBtn.disabled = (currentIndex === loadedQuestions.length - 1 && allLoaded) || (currentIndex === loadedQuestions.length - 1 && !allLoaded && isLoading);
+                if (!allLoaded && currentIndex === loadedQuestions.length - 1) {
+                    nextBtn.disabled = false;
+                }
+            }
+            
+            function updateJumpInput() {
+                jumpInput.value = currentIndex + 1;
+                jumpInput.max = allLoaded ? loadedQuestions.length : (loadedQuestions.length + 50);
+                totalSpan.textContent = allLoaded ? loadedQuestions.length : (loadedQuestions.length + '+');
+            }
+            
+            function updateSubmitButtonState() {
+                const isAfter200 = (currentIndex + 1) >= 200;
+                if (isAfter200 && !submitted) {
+                    submitHeaderBtn.disabled = false;
+                    submitHeaderBtn.classList.add('enabled');
+                } else {
+                    submitHeaderBtn.disabled = true;
+                    submitHeaderBtn.classList.remove('enabled');
+                }
+                if (submitted) {
+                    submitHeaderBtn.disabled = true;
+                    submitHeaderBtn.textContent = '✓ Submitted';
+                } else {
+                    submitHeaderBtn.textContent = 'Submit Quiz';
+                }
+            }
+            
+            async function finalizeQuiz() {
+                if (submitted) {
+                    showToast("Quiz already submitted!");
+                    return;
+                }
+                // Record final question performance
+                if (currentQuestionId) {
+                    const isCorrect = evaluateCurrentQuestionCorrectness();
+                    recordCurrentQuestion(isCorrect);
+                }
+                await finalizeSession();
+                // Compute score for UI feedback
+                let objectiveCount = 0, correct = 0;
+                for (let i = 0; i < loadedQuestions.length; i++) {
+                    const q = loadedQuestions[i];
+                    if (q.questionType !== 'Subjective' && q.correctIndex !== undefined) {
+                        objectiveCount++;
+                        if (userAnswers[i] !== undefined && userAnswers[i] === q.correctIndex) correct++;
+                    }
+                }
+                const pct = objectiveCount ? Math.round((correct / objectiveCount) * 100) : 0;
+                showToast(`🎯 Score: ${correct}/${objectiveCount} (${pct}%)`);
+                submitted = true;
+                submitHeaderBtn.disabled = true;
+                submitHeaderBtn.textContent = '✓ Submitted';
+            }
+            
+            // -------------------- FETCH LOGIC (preserve original) --------------------
+            async function fetchFirstChunk() {
+                if (isLoading) return;
+                isLoading = true;
+                dynamicContainer.innerHTML = `<div class="loader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>`;
+                try {
+                    const url = `${QUIZ_ENDPOINT}?className=${encodeURIComponent(currentClass)}&subject=${encodeURIComponent(currentSubject)}&chapter=${encodeURIComponent(currentChapter)}&limit=5`;
+                    const resp = await fetch(url);
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    const data = await resp.json();
+                    if (!data.success) throw new Error(data.error || 'Failed');
+                    const questions = data.questions || [];
+                    if (questions.length === 0) {
+                        dynamicContainer.innerHTML = `<div class="info-box">No questions available.</div>`;
+                        allLoaded = true;
+                        return;
+                    }
+                    loadedQuestions = questions;
+                    nextCursor = data.nextCursor || null;
+                    allLoaded = !data.hasMore;
+                    totalSpan.textContent = loadedQuestions.length + (allLoaded ? '' : '+');
+                    userAnswers = new Array(loadedQuestions.length).fill(null);
+                    currentIndex = 0;
+                    await renderCurrentQuestionAndStartTimer();
+                } catch (err) {
+                    dynamicContainer.innerHTML = `<div class="error-message">${err.message}</div>`;
+                } finally {
+                    isLoading = false;
+                }
+            }
+            
+            async function fetchNextChunk() {
+                if (isLoading || allLoaded || !nextCursor) return;
+                isLoading = true;
+                try {
+                    const url = `${QUIZ_ENDPOINT}?className=${encodeURIComponent(currentClass)}&subject=${encodeURIComponent(currentSubject)}&chapter=${encodeURIComponent(currentChapter)}&limit=5&cursor=${nextCursor}`;
+                    const resp = await fetch(url);
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    const data = await resp.json();
+                    if (!data.success) throw new Error(data.error);
+                    const newQuestions = data.questions || [];
+                    if (newQuestions.length === 0) {
+                        allLoaded = true;
+                        return;
+                    }
+                    loadedQuestions.push(...newQuestions);
+                    nextCursor = data.nextCursor || null;
+                    allLoaded = !data.hasMore;
+                    userAnswers = [...userAnswers, ...new Array(newQuestions.length).fill(null)];
+                    totalSpan.textContent = loadedQuestions.length + (allLoaded ? '' : '+');
+                } catch (err) {
+                    showToast("Failed to load more questions", true);
+                } finally {
+                    isLoading = false;
+                }
+            }
+            
+            // -------------------- INITIALIZATION --------------------
+            async function init() {
+                const params = new URLSearchParams(window.location.search);
+                const className = params.get('className');
+                const subject = params.get('subject');
+                const chapter = params.get('chapter');
+                if (!className || !subject || !chapter) {
+                    dynamicContainer.innerHTML = `<div class="error-message">Missing parameters: className, subject, chapter</div>`;
+                    chapterTitleEl.textContent = 'Error';
+                    return;
+                }
+                currentClass = decodeURIComponent(className);
+                currentSubject = decodeURIComponent(subject);
+                currentChapter = decodeURIComponent(chapter);
+                chapterTitleEl.textContent = currentChapter;
+                
+                // Bind events
+                prevBtn.onclick = goPrev;
+                nextBtn.onclick = goNext;
+                jumpInput.addEventListener('change', async (e) => {
+                    let val = parseInt(e.target.value);
+                    if (isNaN(val)) val = 1;
+                    await jumpToQuestion(val);
+                });
+                submitHeaderBtn.onclick = finalizeQuiz;
+                document.getElementById('backButton')?.addEventListener('click', () => {
+                    finalizeSession();
+                    setTimeout(() => window.history.back(), 100);
+                });
+                
+                // Visibility change: pause/resume timer
+                document.addEventListener("visibilitychange", () => {
+                    if (document.hidden) {
+                        pauseTimer();
+                    } else {
+                        resumeTimer();
+                    }
+                });
+                
+                // Before unload: send final report
+                window.addEventListener("beforeunload", () => {
+                    finalizeSession();
+                });
+                
+                // Start batch interval (every 60 seconds)
+                batchIntervalId = setInterval(() => {
+                    sendPerformanceReport(false);
+                }, 60000);
+                
+                await fetchFirstChunk();
+            }
+            
+            init();
+        })();
+    </script>
+</body>
+</html>
