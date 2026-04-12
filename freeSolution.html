@@ -1274,8 +1274,11 @@ else renderPosts([]);
             }
 
             // Initialise UI and data
-            initSmartHeader();
+initSmartHeader();
 setupInfiniteScroll();
+document.addEventListener('pointerdown', function(e) { 
+    if (!e.target.closest('.custom-select-wrapper')) closeAllDropdowns(); 
+});
 
 currentFeedMode = 'paginated';
 postsContainer.innerHTML = '<div class="loader">...</div>';
