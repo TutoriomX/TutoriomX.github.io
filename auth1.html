@@ -646,8 +646,7 @@ window.setDoc = setDoc;
     showToast('Step 2: Saving to Firestore...', false);
     await window.setDoc(
         window.doc(window.db, 'users', user.uid),
-        { sessionId },
-        { merge: true }
+        { sessionId }
     );
     showToast('Step 3: Session saved!', false);
 } catch(e) {
