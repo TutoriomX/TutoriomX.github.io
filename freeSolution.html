@@ -678,7 +678,32 @@
 
         // ======================== API CONFIGURATION ========================
         const API_BASE = "https://dilshadalmm-yosv.onrender.com";
+        // ── SESSION LISTENER ──
+function startSessionListener() {
+    const localSessionId = localStorage.getItem('sessionId');
+    const uid = localStorage.getItem('uid');
+    if (!localSessionId || !uid) return;
 
+    const unsubscribe = firebase.firestore()
+        .collection('users')
+        .doc(uid)
+        .onSnapshot((doc) => {
+            if (!doc.exists) return;
+            const firestoreSessionId = doc.data().sessionId;
+            if (firestoreSessionId !== localSessionId) {
+                unsubscribe();
+                localStorage.removeItem('sessionId');
+                localStorage.removeItem('uid');
+                showToast('Logged in on another device. Signing out...', true);
+                setTimeout(() => {
+                    auth.signOut();
+                    window.location.href = 'auth1.html';
+                }, 2000);
+            }
+        }, (err) => {
+            console.warn('Session listener error', err);
+        });
+        }
         // --- READ CLASS, SUBJECT & TUTOR FROM URL PARAMETERS ---
         const urlParams = new URLSearchParams(window.location.search);
         let selectedClassId = urlParams.get('classId') || null;
