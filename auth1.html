@@ -638,16 +638,19 @@ window.setDoc = setDoc;
             
            // ── SESSION: Generate & save sessionId ──
     try {
-        const sessionId = crypto.randomUUID();
-        localStorage.setItem('sessionId', sessionId);
-        localStorage.setItem('uid', user.uid);
-       await window.setDoc(
-    window.doc(window.db, 'users', user.uid),
-    { sessionId },
-    { merge: true }
-); 
-    } catch(e) {
-        console.warn('Session save failed', e);
+    showToast('Step 1: Generating session...', false);
+    const sessionId = crypto.randomUUID();
+    localStorage.setItem('sessionId', sessionId);
+    localStorage.setItem('uid', user.uid);
+    showToast('Step 2: Saving to Firestore...', false);
+    await window.setDoc(
+        window.doc(window.db, 'users', user.uid),
+        { sessionId },
+        { merge: true }
+    );
+    showToast('Step 3: Session saved!', false);
+} catch(e) {
+    showToast('Error: ' + e.message, true);
     }
  
     loginRegisterContainer.classList.add('hidden');
