@@ -639,6 +639,7 @@ window.setDoc = setDoc;
            // ── SESSION: Generate & save sessionId ──
     try {
     showToast('Step 1: Generating session...', false);
+    await user.getIdToken(true); // ← ensure auth token is fresh
     const sessionId = crypto.randomUUID();
     localStorage.setItem('sessionId', sessionId);
     localStorage.setItem('uid', user.uid);
