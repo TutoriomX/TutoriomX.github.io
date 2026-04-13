@@ -753,6 +753,18 @@
             </div>
         </footer>
     </main>
+    <!-- PWA Install Button (Floating) -->
+<button
+    id="pwaInstallBtn"
+    style="position: fixed; bottom: 100px; right: 24px; z-index: 99; display: none;"
+    class="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl text-white hover:brightness-90 transition-all"
+>
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+</button>
     <!-- Floating Action Button -->
 <button
     id="fabChatBtn"
@@ -796,7 +808,49 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        // ======================== PWA INSTALL HANDLING ========================
+let deferredInstallPrompt = null;
+const pwaInstallBtn = document.getElementById('pwaInstallBtn');
 
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the default mini-infobar from appearing
+    e.preventDefault();
+    // Stash the event so it can be triggered later
+    deferredInstallPrompt = e;
+    // Show the install button
+    if (pwaInstallBtn) {
+        pwaInstallBtn.style.display = 'flex';
+    }
+    console.log('✅ beforeinstallprompt fired – install button shown');
+});
+
+if (pwaInstallBtn) {
+    pwaInstallBtn.addEventListener('click', async () => {
+        if (!deferredInstallPrompt) {
+            // Fallback: show manual instructions
+            showToast('Tap "Add to Home Screen" from browser menu', false);
+            return;
+        }
+        // Show the install prompt
+        deferredInstallPrompt.prompt();
+        // Wait for the user's choice
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        console.log(`User response: ${outcome}`);
+        // Clear the saved prompt (can only be used once)
+        deferredInstallPrompt = null;
+        // Hide the button after prompt (optional)
+        pwaInstallBtn.style.display = 'none';
+        if (outcome === 'accepted') {
+            showToast('Installing… Thanks!', false);
+        }
+    });
+}
+
+// Optional: hide button if app is already installed
+window.addEventListener('appinstalled', () => {
+    if (pwaInstallBtn) pwaInstallBtn.style.display = 'none';
+    console.log('PWA installed');
+});
         // ======================== API CONFIGURATION ========================
         const API_BASE = "https://dilshadalmm-yosv.onrender.com";
         // ── SESSION LISTENER ──
