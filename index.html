@@ -2401,18 +2401,15 @@ else renderPosts([]);
         async function autoSelectFirstTutorAndFetch() {
             if (!selectedClassId || !selectedSubjectId) return;
 
-            // Fetch tutors for this class+subject
-            const tutorsData = await fetchJSON(
-                `${API_BASE}/tutors?classId=${encodeURIComponent(selectedClassId)}&subjectId=${encodeURIComponent(selectedSubjectId)}`,
-                'Failed to load tutors'
-            );
+            // Let populateTutorSelect do the single fetch and build the dropdown
+            await populateTutorSelect();
 
-            if (tutorsData && Array.isArray(tutorsData) && tutorsData.length > 0) {
-                const firstTutor = tutorsData[0];
-                selectedTutorId = firstTutor.tutorId || firstTutor.id;
-
-                // Rebuild tutor dropdown to reflect auto-selected tutor
-                await populateTutorSelect();
+            // Read the first tutor from the dropdown if none already selected
+            if (!selectedTutorId) {
+                const tutorSelectEl = document.getElementById('tutorSelect');
+                if (tutorSelectEl && tutorSelectEl.options.length > 0) {
+                    selectedTutorId = tutorSelectEl.options[0].value || null;
+                }
             }
 
             // Fetch posts (selectedTutorId may or may not be set)
@@ -2455,11 +2452,10 @@ else renderPosts([]);
             }
             selectedSubjectId = subjectsData[0].subjectId;
 
-            // Rebuild filter UI for auto-selected class+subject AND auto-select first tutor in parallel
-            await Promise.all([
-                buildFilterUI(),
-                autoSelectFirstTutorAndFetch()
-            ]);
+            // Rebuild filter UI first (populates tutor dropdown + caches tutors),
+            // then auto-select first tutor — sequential so cache is warm for step 2
+            await buildFilterUI();
+            await autoSelectFirstTutorAndFetch();
         }
 
         // ======================== AUTH & INIT ========================
@@ -2484,16 +2480,7 @@ else renderPosts([]);
             setupInfiniteScroll();
             startSessionListener(user);
             // Pre-fetch nav data in background (no await — fire and forget)
-            fetchJSON(`${API_BASE}/classes`, 'Failed to pre-load nav').then(async classesData => {
-                if (!classesData || !Array.isArray(classesData)) return;
-                const classesWithSubjects = await Promise.all(
-                    classesData.map(async (cls) => {
-                        const subjects = await fetchJSON(`${API_BASE}/subjects?classId=${encodeURIComponent(cls.classId)}`, '');
-                        return { classId: cls.classId, className: cls.className, subjects: Array.isArray(subjects) ? subjects : [] };
-                    })
-                );
-                navCoursesCache = classesWithSubjects; // cache is ready before user ever opens nav
-            });
+            
             document.addEventListener('pointerdown', function(e) { 
                 if (!e.target.closest('.custom-select-wrapper')) closeAllDropdowns(); 
             });
