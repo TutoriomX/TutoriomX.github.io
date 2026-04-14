@@ -1086,7 +1086,7 @@
         showToast('Session expired. Please sign in again.', true);
         setTimeout(() => {
             auth.signOut();
-            window.location.href = 'auth1.html';
+            window.location.href = '/auth/';
         }, 2000);
         return;
     }
