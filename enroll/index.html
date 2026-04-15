@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Enrollment</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(145deg, #f6f9fc 0%, #e9f2f9 100%);
+      padding: 1.5rem;
+    }
+    .card {
+      max-width: 460px;
+      width: 100%;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 2.5rem;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 25px 40px -12px rgba(2, 50, 80, 0.25),
+                  0 2px 8px rgba(0,0,0,0.03);
+      border: 1px solid rgba(255,255,255,0.6);
+      transition: transform 0.2s ease;
+    }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #0b2b3d;
+      margin-bottom: 0.25rem;
+    }
+    .subhead {
+      color: #3a6378;
+      margin-bottom: 2rem;
+      font-weight: 400;
+      font-size: 1rem;
+      border-left: 3px solid #2d7a9b;
+      padding-left: 1rem;
+    }
+    .input-group {
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #1a4b63;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    input {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      font-size: 1rem;
+      border: 1.5px solid #cbdde6;
+      border-radius: 60px;
+      background: white;
+      transition: all 0.15s;
+      outline: none;
+      box-shadow: inset 0 2px 4px rgba(0,20,30,0.02);
+    }
+    input:focus {
+      border-color: #1f6e8c;
+      box-shadow: 0 0 0 3px rgba(31,110,140,0.15), inset 0 1px 3px #fff;
+    }
+    input::placeholder {
+      color: #99b6c5;
+      font-weight: 300;
+    }
+    button {
+      width: 100%;
+      background: #1a5f7a;
+      color: white;
+      font-weight: 600;
+      font-size: 1.1rem;
+      padding: 1rem;
+      border: none;
+      border-radius: 60px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.05s, box-shadow 0.2s;
+      box-shadow: 0 10px 18px -8px rgba(21, 80, 105, 0.3);
+      margin-top: 0.5rem;
+      letter-spacing: 0.3px;
+    }
+    button:hover {
+      background: #0e4a63;
+      box-shadow: 0 12px 22px -8px #0a3e55;
+    }
+    button:disabled {
+      background: #9bb8c9;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .message {
+      margin-top: 1.8rem;
+      padding: 0.8rem 1.2rem;
+      border-radius: 40px;
+      font-size: 0.95rem;
+      text-align: center;
+      background: #f5faff;
+      border: 1px solid #d7e5ed;
+      color: #1f4b60;
+    }
+    .message.success {
+      background: #e3f3e9;
+      border-color: #a8d5ba;
+      color: #1b6b3f;
+    }
+    .message.error {
+      background: #ffeae8;
+      border-color: #fbc5c2;
+      color: #b1382c;
+    }
+    .note {
+      margin-top: 1.8rem;
+      font-size: 0.8rem;
+      color: #557a8c;
+      text-align: center;
+      border-top: 1px dashed #bfd6e2;
+      padding-top: 1.5rem;
+    }
+    .spinner {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.6s linear infinite;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>🎓 Enroll</h1>
+  <div class="subhead">CEE 2026 · Chemistry access</div>
+
+  <form id="enrollForm">
+    <div class="input-group">
+      <label for="email">Email address</label>
+      <input type="email" id="email" name="email" placeholder="student@example.com" required autocomplete="email">
+    </div>
+    <div class="input-group">
+      <label for="promoCode">Promo code</label>
+      <input type="text" id="promoCode" name="promoCode" placeholder="CEE 2026" required>
+    </div>
+    <button type="submit" id="submitBtn">Enroll now</button>
+  </form>
+
+  <div id="statusMessage" class="message" style="display: none;"></div>
+  <div class="note">
+    ⚡ Already have an account? You'll be redirected if needed.<br>
+    🔐 Promo code is case‑sensitive.
+  </div>
+</div>
+
+<script>
+  (function() {
+    'use strict';
+
+    // ----- CONFIGURATION -----
+    const ENROLL_ENDPOINT = '/enroll';   // Adjust if backend is on different origin
+    // For local dev: if backend runs on port 3000 and frontend on 5500, use full URL:
+    // const ENROLL_ENDPOINT = 'http://localhost:3000/enroll';
+
+    const form = document.getElementById('enrollForm');
+    const emailInput = document.getElementById('email');
+    const promoInput = document.getElementById('promoCode');
+    const submitBtn = document.getElementById('submitBtn');
+    const msgDiv = document.getElementById('statusMessage');
+
+    // Helper to show messages
+    function showMessage(text, type = 'info') {
+      msgDiv.style.display = 'block';
+      msgDiv.textContent = text;
+      msgDiv.className = 'message';
+      if (type === 'success') msgDiv.classList.add('success');
+      if (type === 'error') msgDiv.classList.add('error');
+    }
+
+    function hideMessage() {
+      msgDiv.style.display = 'none';
+    }
+
+    function setLoading(isLoading) {
+      submitBtn.disabled = isLoading;
+      if (isLoading) {
+        submitBtn.innerHTML = '<span class="spinner"></span> Enrolling...';
+      } else {
+        submitBtn.textContent = 'Enroll now';
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideMessage();
+
+      const email = emailInput.value.trim();
+      const promoCode = promoInput.value.trim();
+
+      if (!email || !promoCode) {
+        showMessage('Please fill in both email and promo code.', 'error');
+        return;
+      }
+
+      // Basic email sanity
+      if (!/^\S+@\S+\.\S+$/.test(email)) {
+        showMessage('Please enter a valid email address.', 'error');
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const response = await fetch(ENROLL_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, promoCode }),
+          // redirect: 'manual'  // we handle redirect manually to show a message
+        });
+
+        // Handle redirect (when user not found, backend returns 302 to auth)
+        if (response.type === 'opaqueredirect' || response.redirected) {
+          // The backend may redirect to https://tutoriom.github.io/auth/
+          // We can inform the user and then navigate.
+          showMessage('Account not found. Redirecting to sign up...', 'info');
+          setTimeout(() => {
+            window.location.href = response.url || 'https://tutoriom.github.io/auth/';
+          }, 1500);
+          return;
+        }
+
+        // For non-redirect responses, parse JSON
+        const data = await response.json();
+
+        if (response.ok) {
+          // 200/201 - success or already enrolled
+          if (data.message && data.message.includes('already enrolled')) {
+            showMessage('✅ ' + data.message, 'success');
+          } else if (data.success) {
+            showMessage('🎉 Enrollment successful! You can now access your courses.', 'success');
+            form.reset(); // optional
+          } else {
+            showMessage(data.message || 'Enrollment completed.', 'success');
+          }
+        } else {
+          // HTTP error status (400, 403, 500 etc)
+          const errorMsg = data.error || 'Something went wrong. Please try again.';
+          showMessage(`❌ ${errorMsg}`, 'error');
+        }
+      } catch (err) {
+        // Network errors, CORS, etc.
+        console.error('Enrollment error:', err);
+        showMessage('⚠️ Network error. Please check your connection.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // Prefill with example for testing (optional)
+    // emailInput.value = 'test@example.com';
+    // promoInput.value = 'CEE 2026';
+  })();
+</script>
+</body>
+</html>
