@@ -2001,19 +2001,51 @@ else renderPosts([]);
 
         function createPostCard(post, index) {
             const { postId, postTitle, postSubtle, videoUrl, thumbnailUrl, createdAt, tutorName } = post;
+
+            // Outer card wrapper
             const section = document.createElement('section');
-            const titleEl = document.createElement('h2');
-            titleEl.textContent = postTitle;
-            titleEl.className = "text-3xl font-extrabold text-gray-900 mb-4 tracking-tight leading-tight uppercase title-underline";
-            const descEl = document.createElement('p');
-            descEl.textContent = postSubtle || "No additional details.";
-            descEl.className = "text-lg text-gray-600 mb-3 font-normal opacity-90";
-            const timeDisplay = document.createElement('div');
-            timeDisplay.className = "timestamp-text";
-            timeDisplay.textContent = formatCreatedAt(createdAt);
-            const tutorDisplay = document.createElement('div');
-            tutorDisplay.className = "tutor-info";
-            tutorDisplay.textContent = `Tutor — ${tutorName}`;
+            section.className = 'neo-card';
+
+            // --- Profile Header ---
+            const profileHeader = document.createElement('div');
+            profileHeader.className = 'px-3 pt-3 pb-2';
+            profileHeader.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <img
+                        src="https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(tutorName)}"
+                        alt="${tutorName}"
+                        class="w-11 h-11 rounded-full profile-ring bg-slate-700"
+                    >
+                    <div class="flex flex-col gap-1.5">
+                        <span class="text-white font-black text-sm uppercase tracking-tight leading-none">${tutorName}</span>
+                        <div class="flex">
+                            <span class="tag-badge px-2 py-0.5 text-[11px] font-black uppercase tracking-tight">
+                                ${formatCreatedAt(createdAt)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            section.appendChild(profileHeader);
+
+            // --- Divider ---
+            const divider = document.createElement('div');
+            divider.className = 'border-t border-slate-700 mx-3';
+            section.appendChild(divider);
+
+            // --- Post Content (title + description) ---
+            const postContent = document.createElement('div');
+            postContent.className = 'px-3 py-3';
+            postContent.innerHTML = `
+                <h2 class="text-white font-black text-lg uppercase tracking-tight mb-1">${postTitle}</h2>
+                <p class="text-slate-100 text-[14px] font-semibold leading-snug underline decoration-slate-600 underline-offset-4">${postSubtle || 'No additional details.'}</p>
+            `;
+            section.appendChild(postContent);
+
+            // --- Media / Video Container ---
+            const mediaWrapper = document.createElement('div');
+            mediaWrapper.className = 'px-2 pb-2';
+
             const hasValidVideo = videoUrl && videoUrl.trim() !== "";
             let mediaContainer;
             if (hasValidVideo) {
@@ -2031,7 +2063,6 @@ else renderPosts([]);
                 mediaContainer.dataset.videoUniqueId = uniqueId;
 
                 if (videoId) {
-                    // Thumbnail state
                     const thumbImg = document.createElement('img');
                     thumbImg.src = getVideoThumbnail(videoUrl, thumbnailUrl);
                     thumbImg.alt = postTitle;
@@ -2043,7 +2074,6 @@ else renderPosts([]);
                     };
                     mediaContainer.appendChild(thumbImg);
 
-                    // YouTube-style play button overlay
                     const svgPlay = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                     svgPlay.setAttribute("width", "90");
                     svgPlay.setAttribute("height", "90");
@@ -2052,28 +2082,24 @@ else renderPosts([]);
                     svgPlay.innerHTML = '<path d="M85.3 24.5c-1-3.7-3.9-6.6-7.6-7.6C71 15 45 15 45 15s-26 0-32.7 1.9c-3.7 1-6.6 3.9-7.6 7.6C2.8 31.2 2.8 45 2.8 45s0 13.8 1.9 20.5c1 3.7 3.9 6.6 7.6 7.6C19 75 45 75 45 75s26 0 32.7-1.9c3.7-1 6.6-3.9 7.6-7.6 1.9-6.7 1.9-20.5 1.9-20.5s0-13.8-1.9-20.5z" fill="#3b82f6"/><path d="M36 58.5V31.5L59.5 45L36 58.5z" fill="white"/>';
                     mediaContainer.appendChild(svgPlay);
 
-                    // Click to launch SimpleYouTubePlayer
-    mediaContainer.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (mediaContainer.dataset.playerInitialized === "true") return;
-    mediaContainer.dataset.playerInitialized = "true";
+                    mediaContainer.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (mediaContainer.dataset.playerInitialized === "true") return;
+                        mediaContainer.dataset.playerInitialized = "true";
 
-    // Pause all other active players before launching this one
-    for (let [otherContainer, otherPlayer] of activePlayersMap.entries()) {
-        if (otherContainer !== mediaContainer) {
-            try {
-                if (otherPlayer && otherPlayer.player &&
-                    typeof otherPlayer.player.pauseVideo === 'function') {
-                    otherPlayer.player.pauseVideo();
-                }
-            } catch (err) { /* ignore */ }
-        }
-    }
+                        for (let [otherContainer, otherPlayer] of activePlayersMap.entries()) {
+                            if (otherContainer !== mediaContainer) {
+                                try {
+                                    if (otherPlayer && otherPlayer.player &&
+                                        typeof otherPlayer.player.pauseVideo === 'function') {
+                                        otherPlayer.player.pauseVideo();
+                                    }
+                                } catch (err) { /* ignore */ }
+                            }
+                        }
 
-                        // Clear thumbnail state
                         mediaContainer.innerHTML = '';
 
-                        // Build full player HTML
                         const playerContainerId = `yt-container-${uniqueId}`;
                         mediaContainer.innerHTML = `
                             <div class="video-wrapper" style="width:100%;margin:0;position:absolute;top:0;left:0;right:0;bottom:0;">
@@ -2132,7 +2158,6 @@ else renderPosts([]);
                     });
 
                 } else {
-                    // Fallback for non-YouTube URLs
                     const wrapper = document.createElement('div');
                     wrapper.className = 'video-iframe-wrapper';
                     const iframe = document.createElement('iframe');
@@ -2153,11 +2178,9 @@ else renderPosts([]);
                 img.onerror = function() { if (!this.src.includes('placeholder-medical')) this.src = "https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?q=80&w=1200&auto=format&fit=crop"; };
                 mediaContainer.appendChild(img);
             }
-            section.appendChild(titleEl);
-            section.appendChild(descEl);
-            section.appendChild(timeDisplay);
-            section.appendChild(tutorDisplay);
-            section.appendChild(mediaContainer);
+
+            mediaWrapper.appendChild(mediaContainer);
+            section.appendChild(mediaWrapper);
             return section;
         }
 
