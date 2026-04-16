@@ -1648,24 +1648,43 @@
                     });
                 }
                 
-                const progressBar = container.querySelector('.top-progress-container');
-                if (progressBar) {
-                    progressBar.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if (!this.player) return;
-                        
-                        try {
-                            const rect = progressBar.getBoundingClientRect();
-                            const clickX = e.clientX - rect.left;
-                            const percentage = (clickX / rect.width) * 100;
-                            const duration = this.player.getDuration();
-                            const seekTime = (percentage / 100) * duration;
-                            this.player.seekTo(seekTime, true);
-                        } catch (error) {
-                            console.error('Seek error:', error);
-                        }
-                    });
-                }
+        const progressBar = container.querySelector('.top-progress-container');
+if (progressBar) {
+    const seekToPosition = (clientX) => {
+        if (!this.player) return;
+        try {
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = Math.max(0, Math.min(clientX - rect.left, rect.width));
+            const percentage = (clickX / rect.width) * 100;
+            const duration = this.player.getDuration();
+            const seekTime = (percentage / 100) * duration;
+            this.player.seekTo(seekTime, true);
+        } catch (error) {
+            console.error('Seek error:', error);
+        }
+    };
+
+    // Click (desktop)
+    progressBar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        seekToPosition(e.clientX);
+    });
+
+    // Touch swipe (mobile)
+    progressBar.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+        seekToPosition(e.touches[0].clientX);
+    }, { passive: true });
+
+    progressBar.addEventListener('touchmove', (e) => {
+        e.stopPropagation();
+        seekToPosition(e.touches[0].clientX);
+    }, { passive: true });
+
+    progressBar.addEventListener('touchend', (e) => {
+        e.stopPropagation();
+    }, { passive: true });
+}
                 
                 const volumeBtn = container.querySelector('.volume-btn');
                 if (volumeBtn) {
