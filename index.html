@@ -784,26 +784,28 @@
             min-width: 0;
         }
         .control-btn {
-            background: #000000;
-            border: none;
-            color: white;
-            cursor: pointer;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 40px;
-            min-height: 40px;
-            font-size: 16px;
-            transition: background-color 0.15s ease;
-            flex-shrink: 0;
-        }
-        .control-btn:hover {
-            background: #333333;
-        }
-        .control-btn:active {
-            background: #666666;
-        }
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
+    font-size: 16px;
+    transition: opacity 0.15s ease;
+    flex-shrink: 0;
+}
+.control-btn:hover {
+    background: transparent;
+    opacity: 0.75;
+}
+.control-btn:active {
+    background: transparent;
+    opacity: 0.5;
+            }
         .control-btn svg {
             width: 20px;
             height: 20px;
@@ -1745,25 +1747,19 @@
                 }
                 
                 if (overlay) {
-                    overlay.addEventListener('click', (e) => {
-                        if (e.target.closest('.control-btn') || 
-                            e.target.closest('.top-progress-container') || 
-                            e.target.closest('.speed-btn')) {
-                            return;
-                        }
-                        
-                        if (!this.player) return;
-                        
-                        try {
-                            if (this.player.getPlayerState() === YT.PlayerState.PLAYING) {
-                                this.player.pauseVideo();
-                            } else {
-                                this.player.playVideo();
-                            }
-                        } catch (error) {
-                            console.error('Overlay click error:', error);
-                        }
-                    });
+    overlay.addEventListener('click', (e) => {
+        // play/pause only via the dedicated button — do nothing here
+        if (e.target.closest('.control-btn') || 
+            e.target.closest('.top-progress-container') || 
+            e.target.closest('.speed-btn')) {
+            return;
+        }
+        // Hide controls on any bare tap/click on the video
+        const controlBar = container.querySelector('.modern-control-bar');
+        if (controlBar && controlBar.classList.contains('visible')) {
+            controlBar.classList.remove('visible');
+        }
+    });
                     
                     let hideTimeout;
                     const showControls = () => {
