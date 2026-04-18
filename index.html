@@ -218,7 +218,7 @@
             background-color: #1e293b;
         }
         .custom-select-option.selected {
-            background-color: #2563eb;
+            background-color: #10b981;
             font-weight: 500;
             color: white;
         }
@@ -520,7 +520,7 @@
                 background-color: #1e293b;
             }
             .custom-select-option.selected {
-                background-color: #2563eb;
+                background-color: #059669;
                 color: white;
             }
             #dynamic-sections-container > section {
@@ -645,6 +645,16 @@
         .nav-subject-item:hover {
             border-color: #3b82f6;
             background-color: #1e293b;
+        }
+        .nav-subject-item.active {
+            background-color: #10b981;
+            border-color: #059669;
+        }
+        .nav-subject-item.active span {
+            color: #ffffff !important;
+        }
+        .nav-subject-item.active .nav-subject-dot {
+            background: #ffffff;
         }
         .nav-subject-dot {
             width: 6px;
@@ -2450,6 +2460,7 @@ else renderPosts([]);
                     course.subjects.forEach(sub => {
                         const subjectItem = document.createElement('div');
                         subjectItem.className = 'nav-subject-item';
+                        if (course.classId === selectedClassId && sub.subjectId === selectedSubjectId) { subjectItem.classList.add('active'); }
                         subjectItem.innerHTML = `<div class="nav-subject-dot"></div><span style="font-size:0.875rem;font-weight:700;color:#cbd5e1;">${sub.subjectName}</span>`;
                         subjectItem.addEventListener('click', () => {
                             handleNavSubjectSelect(course.classId, sub.subjectId);
@@ -2540,6 +2551,7 @@ else renderPosts([]);
             selectedSubjectId = subjectId;
             selectedTutorId = null;
             selectedChapterId = null;
+            if (navCoursesCache) { renderNavCourses(navCoursesCache); }
 
             // Show loading in posts container
             currentFeedMode = 'paginated';
