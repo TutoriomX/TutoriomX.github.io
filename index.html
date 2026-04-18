@@ -2038,14 +2038,14 @@ if (progressBar) {
 
         // Filtered posts (with chapter)
         async function fetchAndRenderFilteredPosts() {
-            if (!selectedClassId || !selectedSubjectId || !selectedTutorId || !selectedChapterId) {
-                if (currentFeedMode === 'filtered') resetToDefaultModeAndClearFilters();
-                return;
-            }
-            currentFeedMode = 'filtered';
-            destroyAllPlayers();
-            postsContainer.innerHTML = '<div class="loader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>';
-            const url = `${API_BASE}/filter-posts?classId=${encodeURIComponent(selectedClassId)}&subjectId=${encodeURIComponent(selectedSubjectId)}&chapterId=${encodeURIComponent(selectedChapterId)}&tutorId=${encodeURIComponent(selectedTutorId)}`;
+    if (!selectedClassId || !selectedSubjectId || !lockedTutorId || !selectedChapterId) {
+        if (currentFeedMode === 'filtered') resetToDefaultModeAndClearFilters();
+        return;
+    }
+    currentFeedMode = 'filtered';
+    destroyAllPlayers();
+    postsContainer.innerHTML = '<div class="loader">...</div>';
+    const url = `${API_BASE}/filter-posts?classId=...&subjectId=...&chapterId=${encodeURIComponent(selectedChapterId)}&tutorId=${encodeURIComponent(lockedTutorId)}`;  // ← use lockedTutorId here too
             const data = await fetchJSON(url, "Failed to load posts.");
             if (data && Array.isArray(data.data)) renderPosts(data.data);
 else if (data && Array.isArray(data)) renderPosts(data);
@@ -2282,20 +2282,56 @@ else renderPosts([]);
             }
 
             const selectComponent = buildCustomSelect(options, 'Select Tutor', selectedTutorId, async (tutorId, tutorName) => {
-                selectedTutorId = tutorId;
-                selectedChapterId = null;   // reset chapter when tutor changes
-                currentFeedMode = 'paginated';
-                paginationCursor = null;
-                hasMorePosts = false;
-                destroyAllPlayers();
-                clearPosts();
-                postsContainer.innerHTML = '<div class="loader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>';
-                await fetchPaginatedPosts(null, false);
-                // Refresh chapter dropdown (options remain same, but selected chapter cleared)
-                await populateChapterSelect(true);
+    selectedTutorId = tutorId;
+    selectedChapterId = null;
+    currentFeedMode = 'paginated';
+    paginationCursor = null;
+    hasMorePosts = false;
+    destroyAllPlayers();
+    clearPosts();
+    postsContainer.innerHTML = '<div class="loader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>';
+    await fetchPaginatedPosts(null, false);
+    await populateChapterSelect(true);
+});
+
+// ---- ADD: inject lock buttons into each tutor option ----
+const dropdown = selectComponent.querySelector('.custom-select-dropdown');
+if (dropdown) {
+    dropdown.querySelectorAll('.custom-select-option').forEach((optionEl, i) => {
+        const tutorId = options[i]?.value;
+        if (!tutorId) return;
+
+        const lockBtn = document.createElement('button');
+        lockBtn.title = 'Lock this tutor for chapter filtering';
+        lockBtn.style.cssText = 'margin-left:auto;flex-shrink:0;background:none;border:none;cursor:pointer;padding:0 4px;font-size:1rem;line-height:1;';
+        lockBtn.innerHTML = lockedTutorId === tutorId
+            ? '<i class="fas fa-lock" style="color:#facc15;"></i>'
+            : '<i class="fas fa-lock-open" style="color:#94a3b8;"></i>';
+
+        lockBtn.addEventListener('click', (e) => {
+            e.stopPropagation();    // don't trigger tutor selection
+            lockedTutorId = tutorId;
+            // Update all lock icons in this dropdown
+            dropdown.querySelectorAll('.custom-select-option').forEach((el, j) => {
+                const btn = el.querySelector('button');
+                if (!btn) return;
+                btn.innerHTML = options[j]?.value === lockedTutorId
+                    ? '<i class="fas fa-lock" style="color:#facc15;"></i>'
+                    : '<i class="fas fa-lock-open" style="color:#94a3b8;"></i>';
             });
-            wrapperDiv.innerHTML = '';
-            wrapperDiv.appendChild(selectComponent);
+            showToast(`Tutor locked: ${options[i]?.label}`);
+        });
+
+        // Make each option a flex row so lock button aligns right
+        optionEl.style.display = 'flex';
+        optionEl.style.alignItems = 'center';
+        optionEl.appendChild(lockBtn);
+    });
+}
+// ---- END lock button injection ----
+
+wrapperDiv.innerHTML = '';
+wrapperDiv.appendChild(selectComponent);
         }
 
         // --- BUILD FILTER UI (only chapter and tutor) ---
@@ -2556,6 +2592,7 @@ else renderPosts([]);
             if (tutorsData && Array.isArray(tutorsData) && tutorsData.length > 0) {
                 const firstTutor = tutorsData[0];
                 selectedTutorId = firstTutor.tutorId || firstTutor.id;
+                lockedTutorId = selectedTutorId;
 
                 // Rebuild tutor dropdown to reflect auto-selected tutor
                 await populateTutorSelect();
